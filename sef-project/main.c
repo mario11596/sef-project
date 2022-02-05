@@ -24,71 +24,68 @@ unsigned char colloc, rowloc;
 
 char keyfind(){
 	while(1){
-		KEY_DDR = 0xF0;           /* set port direction as input-output */
+		KEY_DDR = 0xF0;          
 		KEY_PRT = 0xFF;
 
 		do{
-			KEY_PRT &= 0x0F;      /* mask PORT for column read only */
+			KEY_PRT &= 0x0F;     
 			asm("NOP");
-			colloc = (KEY_PIN & 0x0F); /* read status of column */
+			colloc = (KEY_PIN & 0x0F); 
 		}while(colloc != 0x0F);
 		
 		do{
 			do{
-				_delay_ms(20);             /* 20ms key debounce time */
-				colloc = (KEY_PIN & 0x0F); /* read status of column */
-				}while(colloc == 0x0F);        /* check for any key press */
+				_delay_ms(20);             
+				colloc = (KEY_PIN & 0x0F); 
+				}while(colloc == 0x0F);       
 				
-				_delay_ms (40);	            /* 20 ms key debounce time */
+				_delay_ms (40);	            
 				colloc = (KEY_PIN & 0x0F);
 			}while(colloc == 0x0F);
 
-			/* now check for rows */
-			KEY_PRT = 0xEF;            /* check for pressed key in 1st row */
+		
+			KEY_PRT = 0xEF;           
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
-			if(colloc != 0x0F)
-			{
+			if(colloc != 0x0F){
 				rowloc = 0;
 				break;
 			}
 
-			KEY_PRT = 0xDF;		/* check for pressed key in 2nd row */
+			KEY_PRT = 0xDF;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
-			if(colloc != 0x0F)
-			{
+			if(colloc != 0x0F){
 				rowloc = 1;
 				break;
 			}
 			
-			KEY_PRT = 0xBF;		/* check for pressed key in 3rd row */
+			KEY_PRT = 0xBF;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
-			if(colloc != 0x0F)
-			{
+			if(colloc != 0x0F){
 				rowloc = 2;
 				break;
 			}
 
-			KEY_PRT = 0x7F;		/* check for pressed key in 4th row */
+			KEY_PRT = 0x7F;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
-			if(colloc != 0x0F)
-			{
+			if(colloc != 0x0F){
 				rowloc = 3;
 				break;
 			}
 		}
 
-		if(colloc == 0x0E)
-		return(keypad[rowloc][0]);
-		else if(colloc == 0x0D)
-		return(keypad[rowloc][1]);
-		else if(colloc == 0x0B)
-		return(keypad[rowloc][2]);
-		else
-		return(keypad[rowloc][3]);
+		if(colloc == 0x0E){
+			return(keypad[rowloc][0]);
+		}else if(colloc == 0x0D){
+			return(keypad[rowloc][1]);
+		}else if(colloc == 0x0B) {
+			return(keypad[rowloc][2]);
+		}else{
+			return(keypad[rowloc][3]);
+		}
 }
 
 
@@ -107,9 +104,7 @@ ISR(TIMER0_COMP_vect) {
 
 
 void buzzerDetection(){
-	OCR0 = 100;
-	TIMSK = _BV(OCIE0);
-	
+	TIMSK = _BV(OCIE0);	
 }
 	
 void provjera(){
@@ -125,10 +120,6 @@ void provjera(){
 }
 
 
-void debounce() {
-	_delay_ms(100);
-	
-}
 
 void keyPassword(){
 	uint8_t i;
@@ -145,24 +136,28 @@ void keyPassword(){
 	provjera();
 }
 
-int main(void)
-{
+void initMain(){
 	DDRD = _BV(4);
 	DDRA = 0xff;
 	PORTA = 0x00;
 	
 	DDRC = _BV(0); //buzzer
-	PORTC = 0xff;
+	PORTC = _BV(0);
 	
 	TCCR1A = _BV(COM1B1) | _BV(WGM10);
 	TCCR1B = _BV(WGM12) | _BV(CS11);
 	OCR1B = 70;
 	
 	TCCR0 = _BV(WGM01) | _BV(CS02) | _BV(CS00);
+	OCR0 = 100;
 	sei();
 
 	lcd_init(LCD_DISP_ON);
 	lcd_clrscr();
+}
+
+int main(void){
+	initMain();
 	
 	while (1){
 		keyPassword();	

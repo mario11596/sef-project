@@ -3,31 +3,31 @@ sef-project.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000004d2  00000000  00000000  00000094  2**1
+  0 .text         000004d8  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         0000003a  00800060  000004d2  00000566  2**0
+  1 .data         0000003a  00800060  000004d8  0000056c  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .bss          00000006  0080009a  0080009a  000005a0  2**0
+  2 .bss          00000006  0080009a  0080009a  000005a6  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  000005a0  2**0
+  3 .comment      00000030  00000000  00000000  000005a6  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000005d0  2**2
+  4 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000005d8  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 000000d8  00000000  00000000  0000060c  2**0
+  5 .debug_aranges 000000d8  00000000  00000000  00000614  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000f88  00000000  00000000  000006e4  2**0
+  6 .debug_info   00000f5c  00000000  00000000  000006ec  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000919  00000000  00000000  0000166c  2**0
+  7 .debug_abbrev 00000919  00000000  00000000  00001648  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000882  00000000  00000000  00001f85  2**0
+  8 .debug_line   00000880  00000000  00000000  00001f61  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000001e8  00000000  00000000  00002808  2**2
+  9 .debug_frame  000001e8  00000000  00000000  000027e4  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00000514  00000000  00000000  000029f0  2**0
+ 10 .debug_str    00000514  00000000  00000000  000029cc  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000779  00000000  00000000  00002f04  2**0
+ 11 .debug_loc    00000732  00000000  00000000  00002ee0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 000000b8  00000000  00000000  0000367d  2**0
+ 12 .debug_ranges 000000b8  00000000  00000000  00003612  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -67,7 +67,7 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	e2 ed       	ldi	r30, 0xD2	; 210
+  66:	e8 ed       	ldi	r30, 0xD8	; 216
   68:	f4 e0       	ldi	r31, 0x04	; 4
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
@@ -89,8 +89,8 @@ Disassembly of section .text:
   80:	a0 3a       	cpi	r26, 0xA0	; 160
   82:	b2 07       	cpc	r27, r18
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
-  86:	0e 94 3e 02 	call	0x47c	; 0x47c <main>
-  8a:	0c 94 67 02 	jmp	0x4ce	; 0x4ce <_exit>
+  86:	0e 94 57 02 	call	0x4ae	; 0x4ae <main>
+  8a:	0c 94 6a 02 	jmp	0x4d4	; 0x4d4 <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -409,34 +409,53 @@ static inline void _delayFourCycles(unsigned int __count)
  250:	08 95       	ret
 
 00000252 <keyfind>:
+const char *provjera_lozinke = "1111";
+unsigned char colloc, rowloc;
+
+char keyfind(){
+	while(1){
+		KEY_DDR = 0xF0;          
+ 252:	80 ef       	ldi	r24, 0xF0	; 240
+ 254:	8a bb       	out	0x1a, r24	; 26
+		KEY_PRT = 0xFF;
+ 256:	8f ef       	ldi	r24, 0xFF	; 255
+ 258:	8b bb       	out	0x1b, r24	; 27
+
+		do{
+			KEY_PRT &= 0x0F;     
+ 25a:	8b b3       	in	r24, 0x1b	; 27
+ 25c:	8f 70       	andi	r24, 0x0F	; 15
+ 25e:	8b bb       	out	0x1b, r24	; 27
+			asm("NOP");
+ 260:	00 00       	nop
+			colloc = (KEY_PIN & 0x0F); 
+ 262:	89 b3       	in	r24, 0x19	; 25
+ 264:	8f 70       	andi	r24, 0x0F	; 15
+ 266:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+		}while(colloc != 0x0F);
+ 26a:	8f 30       	cpi	r24, 0x0F	; 15
+ 26c:	b1 f7       	brne	.-20     	; 0x25a <keyfind+0x8>
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
- 252:	80 ef       	ldi	r24, 0xF0	; 240
- 254:	8a bb       	out	0x1a, r24	; 26
- 256:	8f ef       	ldi	r24, 0xFF	; 255
- 258:	8b bb       	out	0x1b, r24	; 27
- 25a:	8b b3       	in	r24, 0x1b	; 27
- 25c:	8f 70       	andi	r24, 0x0F	; 15
- 25e:	8b bb       	out	0x1b, r24	; 27
- 260:	00 00       	nop
- 262:	89 b3       	in	r24, 0x19	; 25
- 264:	8f 70       	andi	r24, 0x0F	; 15
- 266:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
- 26a:	8f 30       	cpi	r24, 0x0F	; 15
- 26c:	b1 f7       	brne	.-20     	; 0x25a <keyfind+0x8>
  26e:	8f ef       	ldi	r24, 0xFF	; 255
  270:	9f e8       	ldi	r25, 0x8F	; 143
  272:	01 97       	sbiw	r24, 0x01	; 1
  274:	f1 f7       	brne	.-4      	; 0x272 <keyfind+0x20>
  276:	00 c0       	rjmp	.+0      	; 0x278 <keyfind+0x26>
  278:	00 00       	nop
+		
+		do{
+			do{
+				_delay_ms(20);             
+				colloc = (KEY_PIN & 0x0F); 
  27a:	89 b3       	in	r24, 0x19	; 25
  27c:	8f 70       	andi	r24, 0x0F	; 15
  27e:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+				}while(colloc == 0x0F);       
  282:	8f 30       	cpi	r24, 0x0F	; 15
  284:	a1 f3       	breq	.-24     	; 0x26e <keyfind+0x1c>
  286:	96 e6       	ldi	r25, 0x66	; 102
@@ -446,57 +465,98 @@ static inline void _delayFourCycles(unsigned int __count)
  28e:	20 40       	sbci	r18, 0x00	; 0
  290:	80 40       	sbci	r24, 0x00	; 0
  292:	e1 f7       	brne	.-8      	; 0x28c <keyfind+0x3a>
+				
+				_delay_ms (40);	            
+				colloc = (KEY_PIN & 0x0F);
  294:	89 b3       	in	r24, 0x19	; 25
  296:	8f 70       	andi	r24, 0x0F	; 15
  298:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+			}while(colloc == 0x0F);
  29c:	8f 30       	cpi	r24, 0x0F	; 15
  29e:	39 f3       	breq	.-50     	; 0x26e <keyfind+0x1c>
+
+		
+			KEY_PRT = 0xEF;           
  2a0:	8f ee       	ldi	r24, 0xEF	; 239
  2a2:	8b bb       	out	0x1b, r24	; 27
+			asm("NOP");
  2a4:	00 00       	nop
+			colloc = (KEY_PIN & 0x0F);
  2a6:	89 b3       	in	r24, 0x19	; 25
  2a8:	8f 70       	andi	r24, 0x0F	; 15
  2aa:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+			if(colloc != 0x0F){
  2ae:	8f 30       	cpi	r24, 0x0F	; 15
  2b0:	19 f0       	breq	.+6      	; 0x2b8 <keyfind+0x66>
+				rowloc = 0;
  2b2:	10 92 9f 00 	sts	0x009F, r1	; 0x80009f <rowloc>
+				break;
  2b6:	27 c0       	rjmp	.+78     	; 0x306 <keyfind+0xb4>
+			}
+
+			KEY_PRT = 0xDF;		
  2b8:	8f ed       	ldi	r24, 0xDF	; 223
  2ba:	8b bb       	out	0x1b, r24	; 27
+			asm("NOP");
  2bc:	00 00       	nop
+			colloc = (KEY_PIN & 0x0F);
  2be:	89 b3       	in	r24, 0x19	; 25
  2c0:	8f 70       	andi	r24, 0x0F	; 15
  2c2:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+			if(colloc != 0x0F){
  2c6:	8f 30       	cpi	r24, 0x0F	; 15
  2c8:	21 f0       	breq	.+8      	; 0x2d2 <keyfind+0x80>
+				rowloc = 1;
  2ca:	81 e0       	ldi	r24, 0x01	; 1
  2cc:	80 93 9f 00 	sts	0x009F, r24	; 0x80009f <rowloc>
+				break;
  2d0:	1a c0       	rjmp	.+52     	; 0x306 <keyfind+0xb4>
+			}
+			
+			KEY_PRT = 0xBF;		
  2d2:	8f eb       	ldi	r24, 0xBF	; 191
  2d4:	8b bb       	out	0x1b, r24	; 27
+			asm("NOP");
  2d6:	00 00       	nop
+			colloc = (KEY_PIN & 0x0F);
  2d8:	89 b3       	in	r24, 0x19	; 25
  2da:	8f 70       	andi	r24, 0x0F	; 15
  2dc:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+			if(colloc != 0x0F){
  2e0:	8f 30       	cpi	r24, 0x0F	; 15
  2e2:	21 f0       	breq	.+8      	; 0x2ec <keyfind+0x9a>
+				rowloc = 2;
  2e4:	82 e0       	ldi	r24, 0x02	; 2
  2e6:	80 93 9f 00 	sts	0x009F, r24	; 0x80009f <rowloc>
+				break;
  2ea:	0d c0       	rjmp	.+26     	; 0x306 <keyfind+0xb4>
+			}
+
+			KEY_PRT = 0x7F;		
  2ec:	8f e7       	ldi	r24, 0x7F	; 127
  2ee:	8b bb       	out	0x1b, r24	; 27
+			asm("NOP");
  2f0:	00 00       	nop
+			colloc = (KEY_PIN & 0x0F);
  2f2:	89 b3       	in	r24, 0x19	; 25
  2f4:	8f 70       	andi	r24, 0x0F	; 15
  2f6:	80 93 9e 00 	sts	0x009E, r24	; 0x80009e <colloc>
+			if(colloc != 0x0F){
  2fa:	8f 30       	cpi	r24, 0x0F	; 15
  2fc:	09 f4       	brne	.+2      	; 0x300 <keyfind+0xae>
  2fe:	a9 cf       	rjmp	.-174    	; 0x252 <keyfind>
+				rowloc = 3;
  300:	83 e0       	ldi	r24, 0x03	; 3
  302:	80 93 9f 00 	sts	0x009F, r24	; 0x80009f <rowloc>
+				break;
+			}
+		}
+
+		if(colloc == 0x0E){
  306:	80 91 9e 00 	lds	r24, 0x009E	; 0x80009e <colloc>
  30a:	8e 30       	cpi	r24, 0x0E	; 14
  30c:	59 f4       	brne	.+22     	; 0x324 <keyfind+0xd2>
+			return(keypad[rowloc][0]);
  30e:	e0 91 9f 00 	lds	r30, 0x009F	; 0x80009f <rowloc>
  312:	f0 e0       	ldi	r31, 0x00	; 0
  314:	ee 0f       	add	r30, r30
@@ -507,8 +567,10 @@ static inline void _delayFourCycles(unsigned int __count)
  31e:	ff 4f       	sbci	r31, 0xFF	; 255
  320:	80 81       	ld	r24, Z
  322:	08 95       	ret
+		}else if(colloc == 0x0D){
  324:	8d 30       	cpi	r24, 0x0D	; 13
  326:	59 f4       	brne	.+22     	; 0x33e <keyfind+0xec>
+			return(keypad[rowloc][1]);
  328:	e0 91 9f 00 	lds	r30, 0x009F	; 0x80009f <rowloc>
  32c:	f0 e0       	ldi	r31, 0x00	; 0
  32e:	ee 0f       	add	r30, r30
@@ -519,8 +581,10 @@ static inline void _delayFourCycles(unsigned int __count)
  338:	ff 4f       	sbci	r31, 0xFF	; 255
  33a:	81 81       	ldd	r24, Z+1	; 0x01
  33c:	08 95       	ret
+		}else if(colloc == 0x0B) {
  33e:	8b 30       	cpi	r24, 0x0B	; 11
  340:	59 f4       	brne	.+22     	; 0x358 <keyfind+0x106>
+			return(keypad[rowloc][2]);
  342:	e0 91 9f 00 	lds	r30, 0x009F	; 0x80009f <rowloc>
  346:	f0 e0       	ldi	r31, 0x00	; 0
  348:	ee 0f       	add	r30, r30
@@ -531,6 +595,8 @@ static inline void _delayFourCycles(unsigned int __count)
  352:	ff 4f       	sbci	r31, 0xFF	; 255
  354:	82 81       	ldd	r24, Z+2	; 0x02
  356:	08 95       	ret
+		}else{
+			return(keypad[rowloc][3]);
  358:	e0 91 9f 00 	lds	r30, 0x009F	; 0x80009f <rowloc>
  35c:	f0 e0       	ldi	r31, 0x00	; 0
  35e:	ee 0f       	add	r30, r30
@@ -540,9 +606,14 @@ static inline void _delayFourCycles(unsigned int __count)
  366:	ec 59       	subi	r30, 0x9C	; 156
  368:	ff 4f       	sbci	r31, 0xFF	; 255
  36a:	83 81       	ldd	r24, Z+3	; 0x03
+		}
+}
  36c:	08 95       	ret
 
 0000036e <__vector_19>:
+
+
+ISR(TIMER0_COMP_vect) {
  36e:	1f 92       	push	r1
  370:	0f 92       	push	r0
  372:	0f b6       	in	r0, 0x3f	; 63
@@ -551,7 +622,9 @@ static inline void _delayFourCycles(unsigned int __count)
  378:	2f 93       	push	r18
  37a:	8f 93       	push	r24
  37c:	9f 93       	push	r25
+		while(counter > 0){
  37e:	1e c0       	rjmp	.+60     	; 0x3bc <__vector_19+0x4e>
+			PORTC = 0xff;
  380:	8f ef       	ldi	r24, 0xFF	; 255
  382:	85 bb       	out	0x15, r24	; 21
  384:	2f ef       	ldi	r18, 0xFF	; 255
@@ -563,6 +636,8 @@ static inline void _delayFourCycles(unsigned int __count)
  390:	e1 f7       	brne	.-8      	; 0x38a <__vector_19+0x1c>
  392:	00 c0       	rjmp	.+0      	; 0x394 <__vector_19+0x26>
  394:	00 00       	nop
+			_delay_ms(100);
+			PORTC = 0x00;
  396:	15 ba       	out	0x15, r1	; 21
  398:	2f ef       	ldi	r18, 0xFF	; 255
  39a:	8f e3       	ldi	r24, 0x3F	; 63
@@ -573,26 +648,43 @@ static inline void _delayFourCycles(unsigned int __count)
  3a4:	e1 f7       	brne	.-8      	; 0x39e <__vector_19+0x30>
  3a6:	00 c0       	rjmp	.+0      	; 0x3a8 <__vector_19+0x3a>
  3a8:	00 00       	nop
+			_delay_ms(100);
+			counter--;
  3aa:	80 91 62 00 	lds	r24, 0x0062	; 0x800062 <counter>
  3ae:	90 91 63 00 	lds	r25, 0x0063	; 0x800063 <counter+0x1>
  3b2:	01 97       	sbiw	r24, 0x01	; 1
  3b4:	90 93 63 00 	sts	0x0063, r25	; 0x800063 <counter+0x1>
  3b8:	80 93 62 00 	sts	0x0062, r24	; 0x800062 <counter>
+		}
+}
+
+
+ISR(TIMER0_COMP_vect) {
+		while(counter > 0){
  3bc:	80 91 62 00 	lds	r24, 0x0062	; 0x800062 <counter>
  3c0:	90 91 63 00 	lds	r25, 0x0063	; 0x800063 <counter+0x1>
  3c4:	18 16       	cp	r1, r24
  3c6:	19 06       	cpc	r1, r25
  3c8:	dc f2       	brlt	.-74     	; 0x380 <__vector_19+0x12>
+			_delay_ms(100);
+			PORTC = 0x00;
+			_delay_ms(100);
+			counter--;
+		} 	
+		TIMSK ^= _BV(OCIE0);
  3ca:	99 b7       	in	r25, 0x39	; 57
  3cc:	82 e0       	ldi	r24, 0x02	; 2
  3ce:	89 27       	eor	r24, r25
  3d0:	89 bf       	out	0x39, r24	; 57
+		PORTC = 0xff;
  3d2:	8f ef       	ldi	r24, 0xFF	; 255
  3d4:	85 bb       	out	0x15, r24	; 21
+		counter = 3;		
  3d6:	83 e0       	ldi	r24, 0x03	; 3
  3d8:	90 e0       	ldi	r25, 0x00	; 0
  3da:	90 93 63 00 	sts	0x0063, r25	; 0x800063 <counter+0x1>
  3de:	80 93 62 00 	sts	0x0062, r24	; 0x800062 <counter>
+}
  3e2:	9f 91       	pop	r25
  3e4:	8f 91       	pop	r24
  3e6:	2f 91       	pop	r18
@@ -603,129 +695,144 @@ static inline void _delayFourCycles(unsigned int __count)
  3f0:	18 95       	reti
 
 000003f2 <buzzerDetection>:
- 3f2:	84 e6       	ldi	r24, 0x64	; 100
- 3f4:	8c bf       	out	0x3c, r24	; 60
- 3f6:	82 e0       	ldi	r24, 0x02	; 2
- 3f8:	89 bf       	out	0x39, r24	; 57
- 3fa:	08 95       	ret
 
-000003fc <provjera>:
- 3fc:	60 91 60 00 	lds	r22, 0x0060	; 0x800060 <__DATA_REGION_ORIGIN__>
- 400:	70 91 61 00 	lds	r23, 0x0061	; 0x800061 <__DATA_REGION_ORIGIN__+0x1>
- 404:	44 e0       	ldi	r20, 0x04	; 4
- 406:	50 e0       	ldi	r21, 0x00	; 0
- 408:	8a e9       	ldi	r24, 0x9A	; 154
- 40a:	90 e0       	ldi	r25, 0x00	; 0
- 40c:	0e 94 59 02 	call	0x4b2	; 0x4b2 <strncmp>
- 410:	89 2b       	or	r24, r25
- 412:	49 f0       	breq	.+18     	; 0x426 <__DATA_REGION_LENGTH__+0x26>
- 414:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
- 418:	84 e7       	ldi	r24, 0x74	; 116
- 41a:	90 e0       	ldi	r25, 0x00	; 0
- 41c:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
- 420:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <buzzerDetection>
- 424:	06 c0       	rjmp	.+12     	; 0x432 <__DATA_REGION_LENGTH__+0x32>
- 426:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
- 42a:	85 e8       	ldi	r24, 0x85	; 133
- 42c:	90 e0       	ldi	r25, 0x00	; 0
- 42e:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
- 432:	84 e0       	ldi	r24, 0x04	; 4
- 434:	ea e9       	ldi	r30, 0x9A	; 154
- 436:	f0 e0       	ldi	r31, 0x00	; 0
- 438:	df 01       	movw	r26, r30
- 43a:	1d 92       	st	X+, r1
- 43c:	8a 95       	dec	r24
- 43e:	e9 f7       	brne	.-6      	; 0x43a <__DATA_REGION_LENGTH__+0x3a>
- 440:	08 95       	ret
 
-00000442 <keyPassword>:
-void debounce() {
-	_delay_ms(100);
+void buzzerDetection(){
+	TIMSK = _BV(OCIE0);	
+ 3f2:	82 e0       	ldi	r24, 0x02	; 2
+ 3f4:	89 bf       	out	0x39, r24	; 57
+ 3f6:	08 95       	ret
+
+000003f8 <provjera>:
+}
 	
+void provjera(){
+	if(strncmp(output, provjera_lozinke, 4)){
+ 3f8:	60 91 60 00 	lds	r22, 0x0060	; 0x800060 <__DATA_REGION_ORIGIN__>
+ 3fc:	70 91 61 00 	lds	r23, 0x0061	; 0x800061 <__DATA_REGION_ORIGIN__+0x1>
+ 400:	44 e0       	ldi	r20, 0x04	; 4
+ 402:	50 e0       	ldi	r21, 0x00	; 0
+ 404:	8a e9       	ldi	r24, 0x9A	; 154
+ 406:	90 e0       	ldi	r25, 0x00	; 0
+ 408:	0e 94 5c 02 	call	0x4b8	; 0x4b8 <strncmp>
+ 40c:	89 2b       	or	r24, r25
+ 40e:	49 f0       	breq	.+18     	; 0x422 <__DATA_REGION_LENGTH__+0x22>
+		lcd_clrscr();
+ 410:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
+		lcd_puts("Netocna lozinka!");	
+ 414:	84 e7       	ldi	r24, 0x74	; 116
+ 416:	90 e0       	ldi	r25, 0x00	; 0
+ 418:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
+		buzzerDetection();	
+ 41c:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <buzzerDetection>
+ 420:	06 c0       	rjmp	.+12     	; 0x42e <__DATA_REGION_LENGTH__+0x2e>
+	} else  {
+		lcd_clrscr();
+ 422:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
+		lcd_puts("Tocna lozinka!");
+ 426:	85 e8       	ldi	r24, 0x85	; 133
+ 428:	90 e0       	ldi	r25, 0x00	; 0
+ 42a:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
+	}
+	memset(output, 0, sizeof(output));
+ 42e:	84 e0       	ldi	r24, 0x04	; 4
+ 430:	ea e9       	ldi	r30, 0x9A	; 154
+ 432:	f0 e0       	ldi	r31, 0x00	; 0
+ 434:	df 01       	movw	r26, r30
+ 436:	1d 92       	st	X+, r1
+ 438:	8a 95       	dec	r24
+ 43a:	e9 f7       	brne	.-6      	; 0x436 <__DATA_REGION_LENGTH__+0x36>
+ 43c:	08 95       	ret
+
+0000043e <keyPassword>:
 }
 
+
+
 void keyPassword(){
- 442:	cf 93       	push	r28
+ 43e:	cf 93       	push	r28
 	uint8_t i;
 	
 	for(i = 0; i < 4; i++){
- 444:	c0 e0       	ldi	r28, 0x00	; 0
- 446:	12 c0       	rjmp	.+36     	; 0x46c <__stack+0xd>
+ 440:	c0 e0       	ldi	r28, 0x00	; 0
+ 442:	12 c0       	rjmp	.+36     	; 0x468 <__stack+0x9>
 		char lozinka = keyfind();
- 448:	0e 94 29 01 	call	0x252	; 0x252 <keyfind>
+ 444:	0e 94 29 01 	call	0x252	; 0x252 <keyfind>
 		
 		output[i] = lozinka;
- 44c:	ec 2f       	mov	r30, r28
- 44e:	f0 e0       	ldi	r31, 0x00	; 0
- 450:	e6 56       	subi	r30, 0x66	; 102
- 452:	ff 4f       	sbci	r31, 0xFF	; 255
- 454:	80 83       	st	Z, r24
+ 448:	ec 2f       	mov	r30, r28
+ 44a:	f0 e0       	ldi	r31, 0x00	; 0
+ 44c:	e6 56       	subi	r30, 0x66	; 102
+ 44e:	ff 4f       	sbci	r31, 0xFF	; 255
+ 450:	80 83       	st	Z, r24
 		lcd_gotoxy(i,0);
- 456:	60 e0       	ldi	r22, 0x00	; 0
- 458:	8c 2f       	mov	r24, r28
- 45a:	0e 94 b2 00 	call	0x164	; 0x164 <lcd_gotoxy>
+ 452:	60 e0       	ldi	r22, 0x00	; 0
+ 454:	8c 2f       	mov	r24, r28
+ 456:	0e 94 b2 00 	call	0x164	; 0x164 <lcd_gotoxy>
 		lcd_clrscr();
- 45e:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
+ 45a:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
 		lcd_puts(output);
- 462:	8a e9       	ldi	r24, 0x9A	; 154
- 464:	90 e0       	ldi	r25, 0x00	; 0
- 466:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
-}
+ 45e:	8a e9       	ldi	r24, 0x9A	; 154
+ 460:	90 e0       	ldi	r25, 0x00	; 0
+ 462:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
+
 
 void keyPassword(){
 	uint8_t i;
 	
 	for(i = 0; i < 4; i++){
- 46a:	cf 5f       	subi	r28, 0xFF	; 255
- 46c:	c4 30       	cpi	r28, 0x04	; 4
- 46e:	60 f3       	brcs	.-40     	; 0x448 <keyPassword+0x6>
+ 466:	cf 5f       	subi	r28, 0xFF	; 255
+ 468:	c4 30       	cpi	r28, 0x04	; 4
+ 46a:	60 f3       	brcs	.-40     	; 0x444 <keyPassword+0x6>
 		output[i] = lozinka;
 		lcd_gotoxy(i,0);
 		lcd_clrscr();
 		lcd_puts(output);
 	}
 	output[4] = '\0';
- 470:	10 92 9e 00 	sts	0x009E, r1	; 0x80009e <colloc>
+ 46c:	10 92 9e 00 	sts	0x009E, r1	; 0x80009e <colloc>
 	provjera();
- 474:	0e 94 fe 01 	call	0x3fc	; 0x3fc <provjera>
+ 470:	0e 94 fc 01 	call	0x3f8	; 0x3f8 <provjera>
 }
- 478:	cf 91       	pop	r28
- 47a:	08 95       	ret
+ 474:	cf 91       	pop	r28
+ 476:	08 95       	ret
 
-0000047c <main>:
+00000478 <initMain>:
 
-int main(void)
-{
+void initMain(){
 	DDRD = _BV(4);
- 47c:	80 e1       	ldi	r24, 0x10	; 16
- 47e:	81 bb       	out	0x11, r24	; 17
+ 478:	80 e1       	ldi	r24, 0x10	; 16
+ 47a:	81 bb       	out	0x11, r24	; 17
 	DDRA = 0xff;
- 480:	8f ef       	ldi	r24, 0xFF	; 255
- 482:	8a bb       	out	0x1a, r24	; 26
+ 47c:	8f ef       	ldi	r24, 0xFF	; 255
+ 47e:	8a bb       	out	0x1a, r24	; 26
 	PORTA = 0x00;
- 484:	1b ba       	out	0x1b, r1	; 27
+ 480:	1b ba       	out	0x1b, r1	; 27
 	
 	DDRC = _BV(0); //buzzer
- 486:	91 e0       	ldi	r25, 0x01	; 1
- 488:	94 bb       	out	0x14, r25	; 20
-	PORTC = 0xff;
- 48a:	85 bb       	out	0x15, r24	; 21
+ 482:	81 e0       	ldi	r24, 0x01	; 1
+ 484:	84 bb       	out	0x14, r24	; 20
+	PORTC = _BV(0);
+ 486:	85 bb       	out	0x15, r24	; 21
 	
 	TCCR1A = _BV(COM1B1) | _BV(WGM10);
- 48c:	81 e2       	ldi	r24, 0x21	; 33
- 48e:	8f bd       	out	0x2f, r24	; 47
+ 488:	81 e2       	ldi	r24, 0x21	; 33
+ 48a:	8f bd       	out	0x2f, r24	; 47
 	TCCR1B = _BV(WGM12) | _BV(CS11);
- 490:	8a e0       	ldi	r24, 0x0A	; 10
- 492:	8e bd       	out	0x2e, r24	; 46
+ 48c:	8a e0       	ldi	r24, 0x0A	; 10
+ 48e:	8e bd       	out	0x2e, r24	; 46
 	OCR1B = 70;
- 494:	86 e4       	ldi	r24, 0x46	; 70
- 496:	90 e0       	ldi	r25, 0x00	; 0
- 498:	99 bd       	out	0x29, r25	; 41
- 49a:	88 bd       	out	0x28, r24	; 40
+ 490:	86 e4       	ldi	r24, 0x46	; 70
+ 492:	90 e0       	ldi	r25, 0x00	; 0
+ 494:	99 bd       	out	0x29, r25	; 41
+ 496:	88 bd       	out	0x28, r24	; 40
 	
 	TCCR0 = _BV(WGM01) | _BV(CS02) | _BV(CS00);
- 49c:	8d e0       	ldi	r24, 0x0D	; 13
- 49e:	83 bf       	out	0x33, r24	; 51
+ 498:	8d e0       	ldi	r24, 0x0D	; 13
+ 49a:	83 bf       	out	0x33, r24	; 51
+	OCR0 = 100;
+ 49c:	84 e6       	ldi	r24, 0x64	; 100
+ 49e:	8c bf       	out	0x3c, r24	; 60
 	sei();
  4a0:	78 94       	sei
 
@@ -734,30 +841,38 @@ int main(void)
  4a4:	0e 94 e4 00 	call	0x1c8	; 0x1c8 <lcd_init>
 	lcd_clrscr();
  4a8:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
+ 4ac:	08 95       	ret
+
+000004ae <main>:
+}
+
+int main(void){
+	initMain();
+ 4ae:	0e 94 3c 02 	call	0x478	; 0x478 <initMain>
 	
 	while (1){
 		keyPassword();	
- 4ac:	0e 94 21 02 	call	0x442	; 0x442 <keyPassword>
- 4b0:	fd cf       	rjmp	.-6      	; 0x4ac <main+0x30>
+ 4b2:	0e 94 1f 02 	call	0x43e	; 0x43e <keyPassword>
+ 4b6:	fd cf       	rjmp	.-6      	; 0x4b2 <main+0x4>
 
-000004b2 <strncmp>:
- 4b2:	fb 01       	movw	r30, r22
- 4b4:	dc 01       	movw	r26, r24
- 4b6:	41 50       	subi	r20, 0x01	; 1
- 4b8:	50 40       	sbci	r21, 0x00	; 0
- 4ba:	30 f0       	brcs	.+12     	; 0x4c8 <strncmp+0x16>
- 4bc:	8d 91       	ld	r24, X+
- 4be:	01 90       	ld	r0, Z+
- 4c0:	80 19       	sub	r24, r0
- 4c2:	19 f4       	brne	.+6      	; 0x4ca <strncmp+0x18>
- 4c4:	00 20       	and	r0, r0
- 4c6:	b9 f7       	brne	.-18     	; 0x4b6 <strncmp+0x4>
- 4c8:	88 1b       	sub	r24, r24
- 4ca:	99 0b       	sbc	r25, r25
- 4cc:	08 95       	ret
+000004b8 <strncmp>:
+ 4b8:	fb 01       	movw	r30, r22
+ 4ba:	dc 01       	movw	r26, r24
+ 4bc:	41 50       	subi	r20, 0x01	; 1
+ 4be:	50 40       	sbci	r21, 0x00	; 0
+ 4c0:	30 f0       	brcs	.+12     	; 0x4ce <strncmp+0x16>
+ 4c2:	8d 91       	ld	r24, X+
+ 4c4:	01 90       	ld	r0, Z+
+ 4c6:	80 19       	sub	r24, r0
+ 4c8:	19 f4       	brne	.+6      	; 0x4d0 <strncmp+0x18>
+ 4ca:	00 20       	and	r0, r0
+ 4cc:	b9 f7       	brne	.-18     	; 0x4bc <strncmp+0x4>
+ 4ce:	88 1b       	sub	r24, r24
+ 4d0:	99 0b       	sbc	r25, r25
+ 4d2:	08 95       	ret
 
-000004ce <_exit>:
- 4ce:	f8 94       	cli
+000004d4 <_exit>:
+ 4d4:	f8 94       	cli
 
-000004d0 <__stop_program>:
- 4d0:	ff cf       	rjmp	.-2      	; 0x4d0 <__stop_program>
+000004d6 <__stop_program>:
+ 4d6:	ff cf       	rjmp	.-2      	; 0x4d6 <__stop_program>
