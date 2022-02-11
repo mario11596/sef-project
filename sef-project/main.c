@@ -12,7 +12,8 @@
 #define KEY_DDR		DDRB
 #define KEY_PIN		PINB
 
-
+#define VALUE_POT 200
+#define POT_ZERO 0
 
 unsigned char keypad[4][4] = {	{'1','4','7','*'},
 								{'2','5','8','0'},
@@ -20,8 +21,8 @@ unsigned char keypad[4][4] = {	{'1','4','7','*'},
 								{'A','B','C','D'}};
 	
 static char output[4];
-static int counter = 6;
-static int vrata = 0;
+static int buzzer_counter = 6;
+static int door = 0;
 static int senzor = 0;
 static int flagPot = 0;
 static int pot1;
@@ -99,12 +100,13 @@ char keyfind(){
 
 
 void buzzerDetection(){
-	while(counter > 0){
+	while(buzzer_counter > 0){
 		PORTC ^= _BV(7);
 		_delay_ms(100);
-		counter--;
+		buzzer_counter--;
 	}	
 }
+
 
 void writeLCD(uint16_t adc) {
 	
@@ -112,24 +114,21 @@ void writeLCD(uint16_t adc) {
 	itoa(round(adc), adcStr, 10);
 	
 	if(flagPot == 0){
-		lcd_gotoxy(6,0);
+		lcd_gotoxy(0,0);
 		lcd_clrscr();
 		lcd_puts(adcStr);
 	} else if(flagPot == 1){
 		lcd_clrscr();
-		lcd_gotoxy(6,0);
+		lcd_gotoxy(0,0);
 		lcd_puts(potChar1);
-		lcd_gotoxy(6,1);
+		lcd_gotoxy(0,1);
 		lcd_puts(adcStr);
 	}
 	
-	if(pot1 == 200 && pot2 == 200){
+	if(pot1 == VALUE_POT && pot2 == VALUE_POT){
 		lcd_clrscr();
 		lcd_puts("Otvoren sef!");
-		
-		
 	}
-
 }
 
 
@@ -139,10 +138,10 @@ void readPotentiometer(){
 		if((ADC <= 205 && ADC >= 195) && flagPot == 0){
 			ADMUX |= _BV(MUX0);
 			flagPot = 1;
-			pot1 = 200;
+			pot1 = VALUE_POT;
 			itoa(pot1, potChar1, 10);
 			} else if((ADC <= 205 && ADC >= 195) && flagPot == 1){
-			pot2 = 200;
+			pot2 = VALUE_POT;
 		}
 		ADCSRA |= _BV(ADSC);
 
@@ -152,7 +151,7 @@ void readPotentiometer(){
 
 		_delay_ms(150);
 		
-		if(pot1 == 200 && pot2 == 200){
+		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
 			break;
 		}
 	}
@@ -160,46 +159,42 @@ void readPotentiometer(){
 
 
 void turn_servo() {
-	if(vrata == 1){
+	if(door == 1){
 		PORTD ^= _BV(5);
 		OCR1A = 300; // position +90°
-	} else{
+	} else if(door == 0){
 		PORTD ^= _BV(5);
 		OCR1A = 65; // position -90°
 		
-		pot1 = 0;
-		pot2 = 0;
+		pot1 = POT_ZERO;
+		pot2 = POT_ZERO;
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
-		
 	}	
 }
 	
 	
 void checkPassword(){
-	if(!strncmp(output, password_lock, 4) && vrata == 1){
-		vrata = 0;
+	if((!strncmp(output, password_lock, 4)) && door == 1){
+		door = 0;
 		turn_servo();
-	}
-	
-	if(strncmp(output, password_check, 4)){
+	} else if((strncmp(output, password_check, 4)) && door == 0){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
-		counter = 6;
+		buzzer_counter = 6;
 		buzzerDetection();	
 	} else  {
 		lcd_clrscr();
 		lcd_puts("Tocna lozinka!");
-		counter = 2;
+		buzzer_counter = 2;
 		buzzerDetection();
-		vrata = 1;
+		door = 1;
 		turn_servo();
 		
 		_delay_ms(300);
 		senzor = 1;
 		readPotentiometer();		
 	}
-	
 	memset(output, 0, sizeof(output));
 }
 
@@ -226,7 +221,7 @@ ISR(TIMER0_COMP_vect){
 
 
 ISR(TIMER1_COMPA_vect){
-	if(vrata == 1){
+	if(door == 1){
 		PORTD ^= _BV(5);
 	}
 }
