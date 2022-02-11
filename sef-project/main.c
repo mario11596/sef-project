@@ -12,7 +12,7 @@
 #define KEY_DDR		DDRB
 #define KEY_PIN		PINB
 
-#define VALUE_POT 200
+#define VALUE_POT 50
 #define POT_ZERO 0
 
 unsigned char keypad[4][4] = {	{'1','4','7','*'},
@@ -29,6 +29,7 @@ static int pot1;
 static int pot2;
 static char potChar1[16];
 static char potChar2[16];
+const char confrmPot = 'A';
 const char *password_check = "1111";
 const char *password_lock = "####";
 unsigned char colloc, rowloc;
@@ -135,23 +136,25 @@ void writeLCD(uint16_t adc) {
 void readPotentiometer(){
 	while(1){
 		
-		if((ADC <= 205 && ADC >= 195) && flagPot == 0){
+		if((ADC/10 <= 51 && ADC/10 >= 49) && flagPot == 0){
 			ADMUX |= _BV(MUX0);
 			flagPot = 1;
 			pot1 = VALUE_POT;
 			itoa(pot1, potChar1, 10);
-			} else if((ADC <= 205 && ADC >= 195) && flagPot == 1){
+			} else if((ADC/10 <= 51 && ADC/10 >= 49) && flagPot == 1){
 			pot2 = VALUE_POT;
 		}
 		ADCSRA |= _BV(ADSC);
 
 		while (!(ADCSRA & _BV(ADIF)));
 
-		writeLCD(ADC);
+		writeLCD(ADC/10);
 
 		_delay_ms(150);
 		
 		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
+			door = 1;
+			turn_servo();
 			break;
 		}
 	}
@@ -168,6 +171,7 @@ void turn_servo() {
 		
 		pot1 = POT_ZERO;
 		pot2 = POT_ZERO;
+		flagPot = 0;
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
 	}	
@@ -188,8 +192,6 @@ void checkPassword(){
 		lcd_puts("Tocna lozinka!");
 		buzzer_counter = 2;
 		buzzerDetection();
-		door = 1;
-		turn_servo();
 		
 		_delay_ms(300);
 		senzor = 1;
