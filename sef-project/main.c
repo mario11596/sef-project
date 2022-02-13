@@ -15,12 +15,9 @@
 #define VALUE_POT 50
 #define POT_ZERO 0
 
-unsigned char keypad[4][4] = {	{'1','4','7','*'},
-								{'2','5','8','0'},
-								{'3','6','9','#'},
-								{'A','B','C','D'}};
-	
-static char output[4];
+unsigned char keypad[4][4] = {{'1','4','7','*'},{'2','5','8','0'},{'3','6','9','#'},{'A','B','C','D'}};
+static char output[5] = {'*','*','*','*'};
+//static char outputPot;
 static int buzzer_counter = 6;
 static int door = 0;
 static int senzor = 0;
@@ -29,10 +26,13 @@ static int pot1;
 static int pot2;
 static char potChar1[16];
 static char potChar2[16];
-const char confrmPot = 'A';
+static int flagWrongPass = 0;
+static int wrongPass_counter = 3;
 const char *password_check = "1111";
 const char *password_lock = "####";
+const char confirm = 'A';
 unsigned char colloc, rowloc;
+
 
 char keyfind(){
 	while(1){
@@ -101,11 +101,44 @@ char keyfind(){
 
 
 void buzzerDetection(){
-	while(buzzer_counter > 0){
-		PORTC ^= _BV(7);
-		_delay_ms(100);
-		buzzer_counter--;
-	}	
+	if(flagWrongPass == 0){
+		while(buzzer_counter > 0){
+			PORTC ^= _BV(7);
+			_delay_ms(100);
+			buzzer_counter--;
+		}
+	} else if(flagWrongPass == 1){
+		while(1){
+			PORTC ^= _BV(7);
+			_delay_ms(100);
+			
+			if(!(PINB & _BV(PB0))){
+				if((PINB & _BV(PB0)) == 0){
+					flagWrongPass = 0;
+					wrongPass_counter = 3;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+void turn_servo() {
+	if(door == 1){
+		PORTD ^= _BV(5);
+		OCR1A = 300; // position +90°
+		} else if(door == 0){
+		PORTD ^= _BV(5);
+		OCR1A = 65; // position -90°
+		
+		pot1 = POT_ZERO;
+		pot2 = POT_ZERO;
+		memset(potChar1, 0, sizeof(potChar1));
+		flagPot = 0;
+		lcd_clrscr();
+		lcd_puts("Sef zatvoren!");
+	}
 }
 
 
@@ -114,15 +147,16 @@ void writeLCD(uint16_t adc) {
 	char adcStr[16];
 	itoa(round(adc), adcStr, 10);
 	
+	
 	if(flagPot == 0){
-		lcd_gotoxy(0,0);
 		lcd_clrscr();
+		lcd_gotoxy(6,0);
 		lcd_puts(adcStr);
 	} else if(flagPot == 1){
 		lcd_clrscr();
-		lcd_gotoxy(0,0);
+		lcd_gotoxy(6,0);
 		lcd_puts(potChar1);
-		lcd_gotoxy(0,1);
+		lcd_gotoxy(6,1);
 		lcd_puts(adcStr);
 	}
 	
@@ -134,22 +168,26 @@ void writeLCD(uint16_t adc) {
 
 
 void readPotentiometer(){
+	uint16_t adc_conversion;
+	
 	while(1){
 		
-		if((ADC/10 <= 51 && ADC/10 >= 49) && flagPot == 0){
+		adc_conversion = ADC/10;
+			
+		if((adc_conversion<= 51 && adc_conversion >= 49) && flagPot == 0){
 			ADMUX |= _BV(MUX0);
 			flagPot = 1;
 			pot1 = VALUE_POT;
 			itoa(pot1, potChar1, 10);
-			} else if((ADC/10 <= 51 && ADC/10 >= 49) && flagPot == 1){
+			} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
 			pot2 = VALUE_POT;
 		}
 		ADCSRA |= _BV(ADSC);
 
 		while (!(ADCSRA & _BV(ADIF)));
 
-		writeLCD(ADC/10);
-
+		writeLCD(adc_conversion);
+		
 		_delay_ms(150);
 		
 		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
@@ -159,61 +197,59 @@ void readPotentiometer(){
 		}
 	}
 }
-
-
-void turn_servo() {
-	if(door == 1){
-		PORTD ^= _BV(5);
-		OCR1A = 300; // position +90°
-	} else if(door == 0){
-		PORTD ^= _BV(5);
-		OCR1A = 65; // position -90°
-		
-		pot1 = POT_ZERO;
-		pot2 = POT_ZERO;
-		flagPot = 0;
-		lcd_clrscr();
-		lcd_puts("Sef zatvoren!");
-	}	
-}
 	
 	
 void checkPassword(){
 	if((!strncmp(output, password_lock, 4)) && door == 1){
 		door = 0;
 		turn_servo();
+		buzzer_counter = 2;
+		buzzerDetection();
 	} else if((strncmp(output, password_check, 4)) && door == 0){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
 		buzzer_counter = 6;
-		buzzerDetection();	
+		buzzerDetection();
+		wrongPass_counter--;
+		
+		if(wrongPass_counter == 0){
+			flagWrongPass = 1;
+			buzzerDetection();
+		}	
 	} else  {
 		lcd_clrscr();
 		lcd_puts("Tocna lozinka!");
 		buzzer_counter = 2;
 		buzzerDetection();
 		
-		_delay_ms(300);
+		_delay_ms(1000);
 		senzor = 1;
 		readPotentiometer();		
 	}
-	memset(output, 0, sizeof(output));
+	_delay_ms(1500);
+	memset(output, '*', sizeof(output)-1);
 }
 
 
 void keyPassword(){
 	uint8_t i;
+	char pass;
 	
+	lcd_clrscr();
+	lcd_puts("Unesite lozinku!");
 	for(i = 0; i < 4; i++){
 		char password = keyfind();
 		
 		output[i] = password;
-		lcd_gotoxy(i,0);
-		lcd_clrscr();
-		lcd_puts(output);
+		lcd_gotoxy(i+5,1);
+		lcd_puts(&output[i]);
 	}
 	output[4] = '\0';
-	checkPassword();
+	
+	pass = keyfind();
+	if(pass == confirm){
+		checkPassword();
+	}
 }
 
 
@@ -245,6 +281,7 @@ void initMain(){
 	TCCR1A = _BV(WGM11) | _BV(COM1A1); 
 	TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10) | _BV(CS11);
 	OCR1A = 65; // position -90°
+	TIMSK = _BV(OCIE1A);
 	
 	
 	TCCR0 = _BV(WGM01) | _BV(WGM00) | _BV(COM01) | _BV(CS00); 
@@ -259,7 +296,6 @@ void initMain(){
 	lcd_init(LCD_DISP_ON);
 	lcd_clrscr();
 	
-	lcd_puts("Upisite lozinku");
 	
 	memset(potChar1, 0, sizeof(potChar1));
 	memset(potChar2, 0, sizeof(potChar2));
