@@ -175,12 +175,20 @@ void readPotentiometer(){
 		adc_conversion = ADC/10;
 			
 		if((adc_conversion<= 51 && adc_conversion >= 49) && flagPot == 0){
-			ADMUX |= _BV(MUX0);
-			flagPot = 1;
-			pot1 = VALUE_POT;
-			itoa(pot1, potChar1, 10);
-			} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
-			pot2 = VALUE_POT;
+			if(!(PINB & _BV(PB0))){
+				if((PINB & _BV(PB0)) == 0){
+					ADMUX |= _BV(MUX0);
+					flagPot = 1;
+					pot1 = VALUE_POT;
+					itoa(pot1, potChar1, 10);
+				}
+			}
+		} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
+			if(!(PINB & _BV(PB0))){
+				if((PINB & _BV(PB0)) == 0){
+					pot2 = VALUE_POT;
+				}
+			}
 		}
 		ADCSRA |= _BV(ADSC);
 
