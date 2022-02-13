@@ -116,6 +116,7 @@ void buzzerDetection(){
 				if((PINB & _BV(PB0)) == 0){
 					flagWrongPass = 0;
 					wrongPass_counter = 3;
+					PORTC = _BV(7);
 					break;
 				}
 			}
@@ -127,17 +128,10 @@ void buzzerDetection(){
 void turn_servo() {
 	if(door == 1){
 		PORTD ^= _BV(5);
-		OCR1A = 300; // position +90°
+		OCR1A = 276; // position +90°
 		} else if(door == 0){
 		PORTD ^= _BV(5);
-		OCR1A = 65; // position -90°
-		
-		pot1 = POT_ZERO;
-		pot2 = POT_ZERO;
-		memset(potChar1, 0, sizeof(potChar1));
-		flagPot = 0;
-		lcd_clrscr();
-		lcd_puts("Sef zatvoren!");
+		OCR1A = 59; // position -90°
 	}
 }
 
@@ -213,6 +207,13 @@ void checkPassword(){
 		turn_servo();
 		buzzer_counter = 2;
 		buzzerDetection();
+		
+		pot1 = POT_ZERO;
+		pot2 = POT_ZERO;
+		memset(potChar1, 0, sizeof(potChar1));
+		flagPot = 0;
+		lcd_clrscr();
+		lcd_puts("Sef zatvoren!");
 	} else if((strncmp(output, password_check, 4)) && door == 0){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
@@ -283,12 +284,12 @@ void initMain(){
 	
 	DDRD |= _BV(5); //servo motor
 	TCNT1 = 0;
-	ICR1 = 2499;
+	ICR1 = 2303; // 50 Hz
 	
 	
 	TCCR1A = _BV(WGM11) | _BV(COM1A1); 
 	TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10) | _BV(CS11);
-	OCR1A = 65; // position -90°
+	OCR1A = 59; // position -90°
 	TIMSK = _BV(OCIE1A);
 	
 	
