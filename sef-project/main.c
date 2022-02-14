@@ -8,24 +8,22 @@
 
 #include "lcd.h"
 
-#define KEY_PRT		PORTB
-#define KEY_DDR		DDRB
-#define KEY_PIN		PINB
+#define KEY_PRT	PORTB
+#define KEY_DDR	DDRB
+#define KEY_PIN	PINB
 
 #define VALUE_POT 50
 #define POT_ZERO 0
 
 unsigned char keypad[4][4] = {{'1','4','7','*'},{'2','5','8','0'},{'3','6','9','#'},{'A','B','C','D'}};
 static char output[5] = {'*','*','*','*'};
-//static char outputPot;
 static int buzzer_counter = 6;
 static int door = 0;
 static int senzor = 0;
 static int flagPot = 0;
 static int pot1;
 static int pot2;
-static char potChar1[16];
-static char potChar2[16];
+static char potChar[16];
 static int flagWrongPass = 0;
 static int wrongPass_counter = 3;
 const char *password_check = "1111";
@@ -104,13 +102,13 @@ void buzzerDetection(){
 	if(flagWrongPass == 0){
 		while(buzzer_counter > 0){
 			PORTC ^= _BV(7);
-			_delay_ms(100);
+			_delay_ms(125);
 			buzzer_counter--;
 		}
 	} else if(flagWrongPass == 1){
 		while(1){
 			PORTC ^= _BV(7);
-			_delay_ms(100);
+			_delay_ms(125);
 			
 			if(!(PINB & _BV(PB0))){
 				if((PINB & _BV(PB0)) == 0){
@@ -149,7 +147,7 @@ void writeLCD(uint16_t adc) {
 	} else if(flagPot == 1){
 		lcd_clrscr();
 		lcd_gotoxy(6,0);
-		lcd_puts(potChar1);
+		lcd_puts(potChar);
 		lcd_gotoxy(6,1);
 		lcd_puts(adcStr);
 	}
@@ -174,7 +172,7 @@ void readPotentiometer(){
 					ADMUX |= _BV(MUX0);
 					flagPot = 1;
 					pot1 = VALUE_POT;
-					itoa(pot1, potChar1, 10);
+					itoa(pot1, potChar, 10);
 				}
 			}
 		} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
@@ -194,6 +192,7 @@ void readPotentiometer(){
 		
 		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
 			door = 1;
+			ADMUX &= ~_BV(MUX0);
 			turn_servo();
 			break;
 		}
@@ -210,11 +209,11 @@ void checkPassword(){
 		
 		pot1 = POT_ZERO;
 		pot2 = POT_ZERO;
-		memset(potChar1, 0, sizeof(potChar1));
+		memset(potChar, 0, sizeof(potChar));
 		flagPot = 0;
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
-	} else if((strncmp(output, password_check, 4)) && door == 0){
+	} else if((strncmp(output, password_check, 4)) && (door == 0 || door == 1)){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
 		buzzer_counter = 6;
@@ -306,8 +305,7 @@ void initMain(){
 	lcd_clrscr();
 	
 	
-	memset(potChar1, 0, sizeof(potChar1));
-	memset(potChar2, 0, sizeof(potChar2));
+	memset(potChar, 0, sizeof(potChar));
 }
 
 
