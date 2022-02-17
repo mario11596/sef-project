@@ -17,16 +17,15 @@
 
 unsigned char keypad[4][4] = {{'1','4','7','*'},{'2','5','8','0'},{'3','6','9','#'},{'A','B','C','D'}};
 static char output[5] = {'*','*','*','*'};
-static int buzzer_counter = 6;
+static int buzzer_counter;
 static int door = 0;
-static int senzor = 0;
 static int flagPot = 0;
 static int pot1;
 static int pot2;
 static char potChar[16];
 static int flagWrongPass = 0;
 static int wrongPass_counter = 3;
-const char *password_check = "1111";
+const char *password_check = "1598";
 const char *password_lock = "####";
 const char confirm = 'A';
 unsigned char colloc, rowloc;
@@ -56,6 +55,7 @@ char keyfind(){
 			KEY_PRT = 0xEF;           
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
+			
 			if(colloc != 0x0F){
 				rowloc = 0;
 				break;
@@ -64,6 +64,7 @@ char keyfind(){
 			KEY_PRT = 0xDF;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
+			
 			if(colloc != 0x0F){
 				rowloc = 1;
 				break;
@@ -72,6 +73,7 @@ char keyfind(){
 			KEY_PRT = 0xBF;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
+			
 			if(colloc != 0x0F){
 				rowloc = 2;
 				break;
@@ -80,21 +82,22 @@ char keyfind(){
 			KEY_PRT = 0x7F;		
 			asm("NOP");
 			colloc = (KEY_PIN & 0x0F);
+			
 			if(colloc != 0x0F){
 				rowloc = 3;
 				break;
 			}
 		}
 
-		if(colloc == 0x0E){
-			return(keypad[rowloc][0]);
-		}else if(colloc == 0x0D){
-			return(keypad[rowloc][1]);
-		}else if(colloc == 0x0B) {
-			return(keypad[rowloc][2]);
-		}else{
-			return(keypad[rowloc][3]);
-		}
+	if(colloc == 0x0E){
+		return(keypad[rowloc][0]);
+	}else if(colloc == 0x0D){
+		return(keypad[rowloc][1]);
+	}else if(colloc == 0x0B) {
+		return(keypad[rowloc][2]);
+	}else{
+		return(keypad[rowloc][3]);
+	}
 }
 
 
@@ -114,7 +117,7 @@ void buzzerDetection(){
 				if((PINB & _BV(PB0)) == 0){
 					flagWrongPass = 0;
 					wrongPass_counter = 3;
-					PORTC = _BV(7);
+					PORTC |= _BV(7);
 					break;
 				}
 			}
@@ -138,7 +141,6 @@ void writeLCD(uint16_t adc) {
 	
 	char adcStr[16];
 	itoa(round(adc), adcStr, 10);
-	
 	
 	if(flagPot == 0){
 		lcd_clrscr();
@@ -173,12 +175,18 @@ void readPotentiometer(){
 					flagPot = 1;
 					pot1 = VALUE_POT;
 					itoa(pot1, potChar, 10);
+					
+					PORTC ^= _BV(1);
+					PORTA ^= _BV(4);
 				}
 			}
 		} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
 			if(!(PINB & _BV(PB0))){
 				if((PINB & _BV(PB0)) == 0){
 					pot2 = VALUE_POT;
+					
+					PORTC ^= _BV(6);
+					PORTA ^= _BV(5);
 				}
 			}
 		}
@@ -207,10 +215,13 @@ void checkPassword(){
 		buzzer_counter = 2;
 		buzzerDetection();
 		
+		PORTC ^= _BV(0) | _BV(1) | _BV(6);
+		PORTA ^= _BV(3) | _BV(4) | _BV(5);
 		pot1 = POT_ZERO;
 		pot2 = POT_ZERO;
 		memset(potChar, 0, sizeof(potChar));
 		flagPot = 0;
+		
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
 	} else if((strncmp(output, password_check, 4)) && (door == 0 || door == 1)){
@@ -229,9 +240,10 @@ void checkPassword(){
 		lcd_puts("Tocna lozinka!");
 		buzzer_counter = 2;
 		buzzerDetection();
+		PORTC ^= _BV(0);
+		PORTA ^= _BV(3);
 		
 		_delay_ms(1000);
-		senzor = 1;
 		readPotentiometer();		
 	}
 	_delay_ms(1500);
@@ -278,8 +290,11 @@ void initMain(){
 	DDRB = 0xff; //keypad
 	PORTB = 0x00;
 	
-	DDRC |= _BV(7); //buzzer
-	PORTC = _BV(7);
+	DDRC = _BV(7); //buzzer
+	DDRC |= _BV(0) | _BV(1) | _BV(6); //led diodes red
+	PORTC = _BV(7) | _BV(0) | _BV(1) | _BV(6);
+	
+	DDRA |= _BV(3) | _BV(4) | _BV(5); // led diodes green
 	
 	DDRD |= _BV(5); //servo motor
 	TCNT1 = 0;
@@ -303,7 +318,6 @@ void initMain(){
 	
 	lcd_init(LCD_DISP_ON);
 	lcd_clrscr();
-	
 	
 	memset(potChar, 0, sizeof(potChar));
 }
