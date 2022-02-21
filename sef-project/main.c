@@ -14,21 +14,26 @@
 
 #define VALUE_POT 50
 #define POT_ZERO 0
+#define CONFIRM_SOUND 2
+#define ALARM_SOUND 6
+#define WRONG_PASS 3
+#define ADC_PLUS 51
+#define ADC_MINUS 49
 
 unsigned char keypad[4][4] = {{'1','4','7','*'},{'2','5','8','0'},{'3','6','9','#'},{'A','B','C','D'}};
 static char output[5] = {'*','*','*','*'};
-static int buzzer_counter;
+static int buzzerCounter;
 static int door = 0;
 static int flagPot = 0;
 static int pot1;
 static int pot2;
 static char potChar[16];
 static int flagWrongPass = 0;
-static int wrongPass_counter = 3;
-const char *password_check = "1598";
-const char *password_lock = "####";
+static int wrongPassCounter = 3;
+const char *passwordCheck = "1598";
+const char *passwordLock = "####";
 const char confirm = 'A';
-unsigned char colloc, rowloc;
+unsigned char column, row;
 
 
 char keyfind(){
@@ -39,85 +44,93 @@ char keyfind(){
 		do{
 			KEY_PRT &= 0x0F;     
 			asm("NOP");
-			colloc = (KEY_PIN & 0x0F); 
-		}while(colloc != 0x0F);
+			column = (KEY_PIN & 0x0F); 
+		}while(column != 0x0F);
 		
 		do{
 			do{
 				_delay_ms(20);             
-				colloc = (KEY_PIN & 0x0F); 
-				}while(colloc == 0x0F);       
+				column = (KEY_PIN & 0x0F); 
+			}while(column == 0x0F);       
 				
-				_delay_ms (40);	            
-				colloc = (KEY_PIN & 0x0F);
-			}while(colloc == 0x0F);
+			_delay_ms (40);	            
+			column = (KEY_PIN & 0x0F);
+		}while(column == 0x0F);
 
-			KEY_PRT = 0xEF;           
-			asm("NOP");
-			colloc = (KEY_PIN & 0x0F);
+		KEY_PRT = 0xEF;           
+		asm("NOP");
+		column = (KEY_PIN & 0x0F);
 			
-			if(colloc != 0x0F){
-				rowloc = 0;
-				break;
-			}
-
-			KEY_PRT = 0xDF;		
-			asm("NOP");
-			colloc = (KEY_PIN & 0x0F);
-			
-			if(colloc != 0x0F){
-				rowloc = 1;
-				break;
-			}
-			
-			KEY_PRT = 0xBF;		
-			asm("NOP");
-			colloc = (KEY_PIN & 0x0F);
-			
-			if(colloc != 0x0F){
-				rowloc = 2;
-				break;
-			}
-
-			KEY_PRT = 0x7F;		
-			asm("NOP");
-			colloc = (KEY_PIN & 0x0F);
-			
-			if(colloc != 0x0F){
-				rowloc = 3;
-				break;
-			}
+		if(column != 0x0F){
+			row = 0;
+			break;
 		}
 
-	if(colloc == 0x0E){
-		return(keypad[rowloc][0]);
-	}else if(colloc == 0x0D){
-		return(keypad[rowloc][1]);
-	}else if(colloc == 0x0B) {
-		return(keypad[rowloc][2]);
+		KEY_PRT = 0xDF;
+		asm("NOP");
+		column = (KEY_PIN & 0x0F);
+		
+		if(column != 0x0F){
+			row = 1;
+			break;
+		}
+			
+		KEY_PRT = 0xBF;
+		asm("NOP");
+		column = (KEY_PIN & 0x0F);
+		
+		if(column != 0x0F){
+			row = 2;
+			break;
+		}
+
+		KEY_PRT = 0x7F;		
+		asm("NOP");
+		column = (KEY_PIN & 0x0F);
+			
+		if(column != 0x0F){
+			row = 3;
+			break;
+		}
+	}
+
+	if(column == 0x0E){
+		return(keypad[row][0]);
+	}else if(column == 0x0D){
+		return(keypad[row][1]);
+	}else if(column == 0x0B) {
+		return(keypad[row][2]);
 	}else{
-		return(keypad[rowloc][3]);
+		return(keypad[row][3]);
 	}
 }
 
 
 void buzzerDetection(){
 	if(flagWrongPass == 0){
-		while(buzzer_counter > 0){
+		while(buzzerCounter > 0){
 			PORTC ^= _BV(7);
 			_delay_ms(125);
-			buzzer_counter--;
+			buzzerCounter--;
 		}
 	} else if(flagWrongPass == 1){
 		while(1){
-			PORTC ^= _BV(7);
+			PORTC ^= _BV(7) | _BV(0) | _BV(1) | _BV(6);
+			PORTA ^= _BV(3) | _BV(4) | _BV(5);
 			_delay_ms(125);
 			
 			if(!(PINB & _BV(PB0))){
 				if((PINB & _BV(PB0)) == 0){
 					flagWrongPass = 0;
-					wrongPass_counter = 3;
+					wrongPassCounter = WRONG_PASS;
 					PORTC |= _BV(7);
+					if(door == 0){
+						PORTC |= _BV(0) | _BV(1) | _BV(6);
+						PORTA &= ~(_BV(3) | _BV(4) | _BV(5));
+					} else {
+						PORTC &= ~(_BV(0) | _BV(1) | _BV(6));
+						PORTA |= _BV(3) | _BV(4) | _BV(5);
+					}		
 					break;
 				}
 			}
@@ -126,11 +139,11 @@ void buzzerDetection(){
 }
 
 
-void turn_servo() {
+void turnServo() {
 	if(door == 1){
 		PORTD ^= _BV(5);
 		OCR1A = 276; // position +90°
-		} else if(door == 0){
+	} else if(door == 0){
 		PORTD ^= _BV(5);
 		OCR1A = 59; // position -90°
 	}
@@ -138,7 +151,6 @@ void turn_servo() {
 
 
 void writeLCD(uint16_t adc) {
-	
 	char adcStr[16];
 	itoa(round(adc), adcStr, 10);
 	
@@ -162,13 +174,13 @@ void writeLCD(uint16_t adc) {
 
 
 void readPotentiometer(){
-	uint16_t adc_conversion;
+	uint16_t adcConversion;
 	
 	while(1){
 		
-		adc_conversion = ADC/10;
+		adcConversion = ADC/10;
 			
-		if((adc_conversion<= 51 && adc_conversion >= 49) && flagPot == 0){
+		if((adcConversion<= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 0){
 			if(!(PINB & _BV(PB0))){
 				if((PINB & _BV(PB0)) == 0){
 					ADMUX |= _BV(MUX0);
@@ -178,15 +190,21 @@ void readPotentiometer(){
 					
 					PORTC ^= _BV(0);
 					PORTA ^= _BV(4);
+					
+					buzzerCounter = CONFIRM_SOUND;
+					buzzerDetection();
 				}
 			}
-		} else if((adc_conversion <= 51 && adc_conversion >= 49) && flagPot == 1){
+		} else if((adcConversion <= ADC_PLUS && adcConversion >= ADC_MINUS) && flagPot == 1){
 			if(!(PINB & _BV(PB0))){
 				if((PINB & _BV(PB0)) == 0){
 					pot2 = VALUE_POT;
 					
 					PORTC ^= _BV(1);
 					PORTA ^= _BV(3);
+					
+					buzzerCounter = CONFIRM_SOUND;
+					buzzerDetection();
 				}
 			}
 		}
@@ -194,14 +212,14 @@ void readPotentiometer(){
 
 		while (!(ADCSRA & _BV(ADIF)));
 
-		writeLCD(adc_conversion);
+		writeLCD(adcConversion);
 		
 		_delay_ms(150);
 		
 		if(pot1 == VALUE_POT && pot2 == VALUE_POT){
 			door = 1;
 			ADMUX &= ~_BV(MUX0);
-			turn_servo();
+			turnServo();
 			break;
 		}
 	}
@@ -209,10 +227,10 @@ void readPotentiometer(){
 	
 	
 void checkPassword(){
-	if((!strncmp(output, password_lock, 4)) && door == 1){
+	if((!strncmp(output, passwordLock, 4)) && door == 1){
 		door = 0;
-		turn_servo();
-		buzzer_counter = 2;
+		turnServo();
+		buzzerCounter = CONFIRM_SOUND;
 		buzzerDetection();
 		
 		PORTC ^= _BV(0) | _BV(1) | _BV(6);
@@ -225,21 +243,21 @@ void checkPassword(){
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
 		
-	} else if((strncmp(output, password_check, 4)) && (door == 0 || door == 1)){
+	} else if((strncmp(output, passwordCheck, 4)) && (door == 0 || door == 1)){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
-		buzzer_counter = 6;
+		buzzerCounter = ALARM_SOUND;
 		buzzerDetection();
-		wrongPass_counter--;
+		wrongPassCounter--;
 		
-		if(wrongPass_counter == 0){
+		if(wrongPassCounter == 0){
 			flagWrongPass = 1;
 			buzzerDetection();
 		}	
 	} else  {
 		lcd_clrscr();
 		lcd_puts("Tocna lozinka!");
-		buzzer_counter = 2;
+		buzzerCounter = CONFIRM_SOUND;
 		buzzerDetection();
 		PORTC ^= _BV(6);
 		PORTA ^= _BV(5);
@@ -292,10 +310,10 @@ void initMain(){
 	PORTB = 0x00;
 	
 	DDRC = _BV(7); //buzzer
-	DDRC |= _BV(0) | _BV(1) | _BV(6); //led diodes red
+	DDRC |= _BV(0) | _BV(1) | _BV(6); //LED diodes red
 	PORTC = _BV(7) | _BV(0) | _BV(1) | _BV(6);
 	
-	DDRA |= _BV(3) | _BV(4) | _BV(5); // led diodes green
+	DDRA |= _BV(3) | _BV(4) | _BV(5); // LED diodes green
 	
 	DDRD |= _BV(5); //servo motor
 	TCNT1 = 0;
