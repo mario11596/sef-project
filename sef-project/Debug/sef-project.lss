@@ -15,11 +15,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .debug_aranges 000000f8  00000000  00000000  00000c50  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00001425  00000000  00000000  00000d48  2**0
+  6 .debug_info   00001426  00000000  00000000  00000d48  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 000009d6  00000000  00000000  0000216d  2**0
+  7 .debug_abbrev 000009d6  00000000  00000000  0000216e  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000b62  00000000  00000000  00002b43  2**0
+  8 .debug_line   00000b63  00000000  00000000  00002b44  2**0
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  00000260  00000000  00000000  000036a8  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -902,9 +902,9 @@ void readPotentiometer(){
  542:	0e 94 37 05 	call	0xa6e	; 0xa6e <__itoa_ncheck>
 					itoa(pot1, potChar, 10);
 					
-					PORTC ^= _BV(1);
+					PORTC ^= _BV(0);
  546:	95 b3       	in	r25, 0x15	; 21
- 548:	82 e0       	ldi	r24, 0x02	; 2
+ 548:	81 e0       	ldi	r24, 0x01	; 1
  54a:	89 27       	eor	r24, r25
  54c:	85 bb       	out	0x15, r24	; 21
 					PORTA ^= _BV(4);
@@ -934,14 +934,14 @@ void readPotentiometer(){
  574:	90 93 e5 00 	sts	0x00E5, r25	; 0x8000e5 <pot2+0x1>
  578:	80 93 e4 00 	sts	0x00E4, r24	; 0x8000e4 <pot2>
 					
-					PORTC ^= _BV(6);
+					PORTC ^= _BV(1);
  57c:	95 b3       	in	r25, 0x15	; 21
- 57e:	80 e4       	ldi	r24, 0x40	; 64
+ 57e:	82 e0       	ldi	r24, 0x02	; 2
  580:	89 27       	eor	r24, r25
  582:	85 bb       	out	0x15, r24	; 21
-					PORTA ^= _BV(5);
+					PORTA ^= _BV(3);
  584:	9b b3       	in	r25, 0x1b	; 27
- 586:	80 e2       	ldi	r24, 0x20	; 32
+ 586:	88 e0       	ldi	r24, 0x08	; 8
  588:	89 27       	eor	r24, r25
  58a:	8b bb       	out	0x1b, r24	; 27
 				}
@@ -1067,6 +1067,7 @@ void checkPassword(){
  662:	90 e0       	ldi	r25, 0x00	; 0
  664:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
  668:	55 c0       	rjmp	.+170    	; 0x714 <checkPassword+0x12e>
+		
 	} else if((strncmp(output, password_check, 4)) && (door == 0 || door == 1)){
  66a:	60 91 62 00 	lds	r22, 0x0062	; 0x800062 <password_check>
  66e:	70 91 63 00 	lds	r23, 0x0063	; 0x800063 <password_check+0x1>
@@ -1127,14 +1128,14 @@ void checkPassword(){
  6e6:	80 93 ec 00 	sts	0x00EC, r24	; 0x8000ec <buzzer_counter>
 		buzzerDetection();
  6ea:	0e 94 b7 01 	call	0x36e	; 0x36e <buzzerDetection>
-		PORTC ^= _BV(0);
+		PORTC ^= _BV(6);
  6ee:	95 b3       	in	r25, 0x15	; 21
- 6f0:	81 e0       	ldi	r24, 0x01	; 1
+ 6f0:	80 e4       	ldi	r24, 0x40	; 64
  6f2:	89 27       	eor	r24, r25
  6f4:	85 bb       	out	0x15, r24	; 21
-		PORTA ^= _BV(3);
+		PORTA ^= _BV(5);
  6f6:	9b b3       	in	r25, 0x1b	; 27
- 6f8:	88 e0       	ldi	r24, 0x08	; 8
+ 6f8:	80 e2       	ldi	r24, 0x20	; 32
  6fa:	89 27       	eor	r24, r25
  6fc:	8b bb       	out	0x1b, r24	; 27
  6fe:	bf ef       	ldi	r27, 0xFF	; 255
@@ -1340,8 +1341,6 @@ void initMain(){
  80e:	98 e0       	ldi	r25, 0x08	; 8
  810:	97 bd       	out	0x27, r25	; 39
  812:	86 bd       	out	0x26, r24	; 38
-	
-	
 	TCCR1A = _BV(WGM11) | _BV(COM1A1); 
  814:	82 e8       	ldi	r24, 0x82	; 130
  816:	8f bd       	out	0x2f, r24	; 47

@@ -176,7 +176,7 @@ void readPotentiometer(){
 					pot1 = VALUE_POT;
 					itoa(pot1, potChar, 10);
 					
-					PORTC ^= _BV(1);
+					PORTC ^= _BV(0);
 					PORTA ^= _BV(4);
 				}
 			}
@@ -185,8 +185,8 @@ void readPotentiometer(){
 				if((PINB & _BV(PB0)) == 0){
 					pot2 = VALUE_POT;
 					
-					PORTC ^= _BV(6);
-					PORTA ^= _BV(5);
+					PORTC ^= _BV(1);
+					PORTA ^= _BV(3);
 				}
 			}
 		}
@@ -224,6 +224,7 @@ void checkPassword(){
 		
 		lcd_clrscr();
 		lcd_puts("Sef zatvoren!");
+		
 	} else if((strncmp(output, password_check, 4)) && (door == 0 || door == 1)){
 		lcd_clrscr();
 		lcd_puts("Netocna lozinka!");
@@ -240,8 +241,8 @@ void checkPassword(){
 		lcd_puts("Tocna lozinka!");
 		buzzer_counter = 2;
 		buzzerDetection();
-		PORTC ^= _BV(0);
-		PORTA ^= _BV(3);
+		PORTC ^= _BV(6);
+		PORTA ^= _BV(5);
 		
 		_delay_ms(1000);
 		readPotentiometer();		
@@ -299,8 +300,6 @@ void initMain(){
 	DDRD |= _BV(5); //servo motor
 	TCNT1 = 0;
 	ICR1 = 2303; // 50 Hz
-	
-	
 	TCCR1A = _BV(WGM11) | _BV(COM1A1); 
 	TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10) | _BV(CS11);
 	OCR1A = 59; // position -90°
