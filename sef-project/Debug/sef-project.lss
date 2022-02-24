@@ -1067,54 +1067,54 @@ void checkPassword(){
  652:	90 91 eb 00 	lds	r25, 0x00EB	; 0x8000eb <doorOpen+0x1>
  656:	01 97       	sbiw	r24, 0x01	; 1
  658:	81 f5       	brne	.+96     	; 0x6ba <checkPassword+0x84>
+		lcd_clrscr();
+ 65a:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
+		lcd_puts("Sef zatvoren!");
+ 65e:	88 e8       	ldi	r24, 0x88	; 136
+ 660:	90 e0       	ldi	r25, 0x00	; 0
+ 662:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
+		
 		doorOpen = 0;
- 65a:	10 92 eb 00 	sts	0x00EB, r1	; 0x8000eb <doorOpen+0x1>
- 65e:	10 92 ea 00 	sts	0x00EA, r1	; 0x8000ea <doorOpen>
+ 666:	10 92 eb 00 	sts	0x00EB, r1	; 0x8000eb <doorOpen+0x1>
+ 66a:	10 92 ea 00 	sts	0x00EA, r1	; 0x8000ea <doorOpen>
 		turnServo();
- 662:	0e 94 13 02 	call	0x426	; 0x426 <turnServo>
+ 66e:	0e 94 13 02 	call	0x426	; 0x426 <turnServo>
 		buzzerCounter = CONFIRM_SOUND;
- 666:	82 e0       	ldi	r24, 0x02	; 2
- 668:	90 e0       	ldi	r25, 0x00	; 0
- 66a:	90 93 ed 00 	sts	0x00ED, r25	; 0x8000ed <buzzerCounter+0x1>
- 66e:	80 93 ec 00 	sts	0x00EC, r24	; 0x8000ec <buzzerCounter>
+ 672:	82 e0       	ldi	r24, 0x02	; 2
+ 674:	90 e0       	ldi	r25, 0x00	; 0
+ 676:	90 93 ed 00 	sts	0x00ED, r25	; 0x8000ed <buzzerCounter+0x1>
+ 67a:	80 93 ec 00 	sts	0x00EC, r24	; 0x8000ec <buzzerCounter>
 		buzzerDetection();
- 672:	0e 94 b7 01 	call	0x36e	; 0x36e <buzzerDetection>
+ 67e:	0e 94 b7 01 	call	0x36e	; 0x36e <buzzerDetection>
 		
 		PORTC ^= _BV(0) | _BV(1) | _BV(6);
- 676:	95 b3       	in	r25, 0x15	; 21
- 678:	83 e4       	ldi	r24, 0x43	; 67
- 67a:	89 27       	eor	r24, r25
- 67c:	85 bb       	out	0x15, r24	; 21
+ 682:	95 b3       	in	r25, 0x15	; 21
+ 684:	83 e4       	ldi	r24, 0x43	; 67
+ 686:	89 27       	eor	r24, r25
+ 688:	85 bb       	out	0x15, r24	; 21
 		PORTA ^= _BV(3) | _BV(4) | _BV(5);
- 67e:	9b b3       	in	r25, 0x1b	; 27
- 680:	88 e3       	ldi	r24, 0x38	; 56
- 682:	89 27       	eor	r24, r25
- 684:	8b bb       	out	0x1b, r24	; 27
+ 68a:	9b b3       	in	r25, 0x1b	; 27
+ 68c:	88 e3       	ldi	r24, 0x38	; 56
+ 68e:	89 27       	eor	r24, r25
+ 690:	8b bb       	out	0x1b, r24	; 27
 		
 		pot1 = POT_ZERO;
- 686:	10 92 e7 00 	sts	0x00E7, r1	; 0x8000e7 <pot1+0x1>
- 68a:	10 92 e6 00 	sts	0x00E6, r1	; 0x8000e6 <pot1>
+ 692:	10 92 e7 00 	sts	0x00E7, r1	; 0x8000e7 <pot1+0x1>
+ 696:	10 92 e6 00 	sts	0x00E6, r1	; 0x8000e6 <pot1>
 		pot2 = POT_ZERO;
- 68e:	10 92 e5 00 	sts	0x00E5, r1	; 0x8000e5 <pot2+0x1>
- 692:	10 92 e4 00 	sts	0x00E4, r1	; 0x8000e4 <pot2>
+ 69a:	10 92 e5 00 	sts	0x00E5, r1	; 0x8000e5 <pot2+0x1>
+ 69e:	10 92 e4 00 	sts	0x00E4, r1	; 0x8000e4 <pot2>
 		memset(potChar, 0, sizeof(potChar));
- 696:	80 e1       	ldi	r24, 0x10	; 16
- 698:	e4 ed       	ldi	r30, 0xD4	; 212
- 69a:	f0 e0       	ldi	r31, 0x00	; 0
- 69c:	df 01       	movw	r26, r30
- 69e:	1d 92       	st	X+, r1
- 6a0:	8a 95       	dec	r24
- 6a2:	e9 f7       	brne	.-6      	; 0x69e <checkPassword+0x68>
+ 6a2:	80 e1       	ldi	r24, 0x10	; 16
+ 6a4:	e4 ed       	ldi	r30, 0xD4	; 212
+ 6a6:	f0 e0       	ldi	r31, 0x00	; 0
+ 6a8:	df 01       	movw	r26, r30
+ 6aa:	1d 92       	st	X+, r1
+ 6ac:	8a 95       	dec	r24
+ 6ae:	e9 f7       	brne	.-6      	; 0x6aa <checkPassword+0x74>
 		flagPot = 0;
- 6a4:	10 92 e9 00 	sts	0x00E9, r1	; 0x8000e9 <flagPot+0x1>
- 6a8:	10 92 e8 00 	sts	0x00E8, r1	; 0x8000e8 <flagPot>
-		
-		lcd_clrscr();
- 6ac:	0e 94 bc 00 	call	0x178	; 0x178 <lcd_clrscr>
-		lcd_puts("Sef zatvoren!");
- 6b0:	88 e8       	ldi	r24, 0x88	; 136
- 6b2:	90 e0       	ldi	r25, 0x00	; 0
- 6b4:	0e 94 d5 00 	call	0x1aa	; 0x1aa <lcd_puts>
+ 6b0:	10 92 e9 00 	sts	0x00E9, r1	; 0x8000e9 <flagPot+0x1>
+ 6b4:	10 92 e8 00 	sts	0x00E8, r1	; 0x8000e8 <flagPot>
  6b8:	4f c0       	rjmp	.+158    	; 0x758 <checkPassword+0x122>
 		
 	} else if(strncmp(output, passwordCheck, PASS_LENGHT)){

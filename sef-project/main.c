@@ -238,6 +238,9 @@ void readPotentiometer(){
 	
 void checkPassword(){
 	if((!strncmp(output, passwordLock, PASS_LENGHT)) && doorOpen == 1){
+		lcd_clrscr();
+		lcd_puts("Sef zatvoren!");
+		
 		doorOpen = 0;
 		turnServo();
 		buzzerCounter = CONFIRM_SOUND;
@@ -250,9 +253,6 @@ void checkPassword(){
 		pot2 = POT_ZERO;
 		memset(potChar, 0, sizeof(potChar));
 		flagPot = 0;
-		
-		lcd_clrscr();
-		lcd_puts("Sef zatvoren!");
 		
 	} else if(strncmp(output, passwordCheck, PASS_LENGHT)){
 		lcd_clrscr();
